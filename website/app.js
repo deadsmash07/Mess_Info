@@ -31,7 +31,13 @@ app.get('/admin', (req, res) => {
 app.post('/update-menu', (req, res) => {
     const { day, meal, menu } = req.body;
     if (!mealPlan[day]) mealPlan[day] = {};
-    mealPlan[day][meal] = menu;
+    if (mealPlan[day][meal]) {
+        // Append new menu item to the existing one
+        mealPlan[day][meal] += ', ' + menu;
+    } else {
+        // If no existing menu item, set it
+        mealPlan[day][meal] = menu;
+    }
     res.redirect('/admin');
 });
 

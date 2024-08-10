@@ -78,6 +78,21 @@
             background-color: #f4f4f4;
         }
     </style>
+    <script>
+        function updateMenuText() {
+            const day = document.getElementById('day').value;
+            const meal = document.getElementById('meal').value;
+            const menuText = document.getElementById('menu-text');
+
+            const currentMenu = <%- JSON.stringify(mealPlan) %>;
+
+            if (currentMenu[day] && currentMenu[day][meal]) {
+                menuText.value = currentMenu[day][meal];
+            } else {
+                menuText.value = '';
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -88,7 +103,8 @@
             <h2>Update Menu</h2>
             <form action="/update-menu" method="POST">
                 <label for="day">Select Day:</label>
-                <select id="day" name="day" required>
+                <select id="day" name="day" onchange="updateMenuText()" required>
+                    <option value="">Select a day</option>
                     <option value="monday">Monday</option>
                     <option value="tuesday">Tuesday</option>
                     <option value="wednesday">Wednesday</option>
@@ -98,13 +114,14 @@
                     <option value="sunday">Sunday</option>
                 </select>
                 <label for="meal">Select Meal:</label>
-                <select id="meal" name="meal" required>
+                <select id="meal" name="meal" onchange="updateMenuText()" required>
+                    <option value="">Select a meal</option>
                     <option value="breakfast">Breakfast</option>
                     <option value="lunch">Lunch</option>
                     <option value="snacks">Evening Snacks</option>
                     <option value="dinner">Dinner</option>
                 </select>
-                <textarea id="menu" name="menu" rows="2" placeholder="Enter menu details..." required></textarea>
+                <textarea id="menu-text" name="menu" rows="2" placeholder="Enter menu details..." required></textarea>
                 <button type="submit">Update Menu</button>
             </form>
         </div>
