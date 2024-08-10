@@ -1,3 +1,5 @@
+require('dotenv').config(); // Load environment variables from .env file
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
@@ -14,6 +16,24 @@ let complaints = [];
 let suggestions = [];
 let announcements = [];
 
+// Basic Authentication Middleware
+function basicAuth(req, res, next) {
+    const auth = { login: process.env.ADMIN_USERNAME, password: process.env.ADMIN_PASSWORD };
+
+    // Parse login and password from headers
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+    const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+
+    // Verify login and password are set and correct
+    if (login && password && login === auth.login && password === auth.password) {
+        return next();
+    }
+
+    // Access denied
+    res.set('WWW-Authenticate', 'Basic realm="401"'); // Prompt for user credentials
+    res.status(401).send('Authentication required.'); // Custom message for 401
+}
+
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -22,27 +42,21 @@ app.get('/', (req, res) => {
     res.render('index', { mealPlan, announcements });
 });
 
-// Admin page route
-app.get('/admin', (req, res) => {
+// Admin page route with authentication
+app.get('/admin', basicAuth, (req, res) => {
     res.render('admin', { mealPlan, complaints, suggestions, announcements });
 });
 
 // Handle menu updates
-app.post('/update-menu', (req, res) => {
+app.post('/update-menu', basicAuth, (req, res) => {
     const { day, meal, menu } = req.body;
     if (!mealPlan[day]) mealPlan[day] = {};
-    if (mealPlan[day][meal]) {
-        // Append new menu item to the existing one
-        mealPlan[day][meal] += ', ' + menu;
-    } else {
-        // If no existing menu item, set it
-        mealPlan[day][meal] = menu;
-    }
+    mealPlan[day][meal] = menu;  // Replaces the current menu for the selected meal
     res.redirect('/admin');
 });
 
 // Handle announcement updates
-app.post('/add-announcement', (req, res) => {
+app.post('/add-announcement', basicAuth, (req, res) => {
     const { announcement } = req.body;
     announcements.push(announcement);
     res.redirect('/admin');
@@ -62,9 +76,13 @@ app.post('/submit-complaint', (req, res) => {
     res.redirect('/');
 });
 
+// Logout route
+app.get('/logout', (req, res) => {
+    res.set('WWW-Authenticate', 'Basic realm="401"'); // Force the browser to prompt for credentials
+    res.status(401).send('You have been logged out. <a href="/admin">Login again</a>'); // Provide a link to log back in
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-    console.log(`Visit http://localhost:${PORT}`);
-
 });
