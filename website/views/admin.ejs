@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Hostel Mess</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        .form-section h2 {
+            margin-bottom: 10px;
+        }
+
+        .form-section input, .form-section textarea, .form-section select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-section button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .form-section button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Panel</h1>
+
+        <!-- Update Menu Section -->
+        <div class="form-section">
+            <h2>Update Menu</h2>
+            <form action="/update-menu" method="POST">
+                <label for="day">Select Day:</label>
+                <select id="day" name="day" required>
+                    <option value="monday">Monday</option>
+                    <option value="tuesday">Tuesday</option>
+                    <option value="wednesday">Wednesday</option>
+                    <option value="thursday">Thursday</option>
+                    <option value="friday">Friday</option>
+                    <option value="saturday">Saturday</option>
+                    <option value="sunday">Sunday</option>
+                </select>
+                <label for="meal">Select Meal:</label>
+                <select id="meal" name="meal" required>
+                    <option value="breakfast">Breakfast</option>
+                    <option value="lunch">Lunch</option>
+                    <option value="snacks">Evening Snacks</option>
+                    <option value="dinner">Dinner</option>
+                </select>
+                <textarea id="menu" name="menu" rows="2" placeholder="Enter menu details..." required></textarea>
+                <button type="submit">Update Menu</button>
+            </form>
+        </div>
+
+        <!-- Add Announcement Section -->
+        <div class="form-section">
+            <h2>Make Announcement</h2>
+            <form action="/add-announcement" method="POST">
+                <textarea id="announcement" name="announcement" rows="4" placeholder="Enter announcement..." required></textarea>
+                <button type="submit">Add Announcement</button>
+            </form>
+        </div>
+
+        <!-- View Complaints and Suggestions Section -->
+        <div class="form-section">
+            <h2>Complaints</h2>
+            <table>
+                <tr>
+                    <th>Date</th>
+                    <th>Meal</th>
+                    <th>Complaint</th>
+                </tr>
+                <% complaints.forEach(function(complaint) { %>
+                <tr>
+                    <td><%= complaint.date %></td>
+                    <td><%= complaint.meal %></td>
+                    <td><%= complaint.complaint %></td>
+                </tr>
+                <% }); %>
+            </table>
+        </div>
+
+        <div class="form-section">
+            <h2>Suggestions</h2>
+            <table>
+                <tr>
+                    <th>Suggestion</th>
+                </tr>
+                <% suggestions.forEach(function(suggestion) { %>
+                <tr>
+                    <td><%= suggestion %></td>
+                </tr>
+                <% }); %>
+            </table>
+        </div>
+
+        <!-- View Announcements Section -->
+        <div class="form-section">
+            <h2>Current Announcements</h2>
+            <table>
+                <tr>
+                    <th>Announcement</th>
+                </tr>
+                <% announcements.forEach(function(announcement) { %>
+                <tr>
+                    <td><%= announcement %></td>
+                </tr>
+                <% }); %>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hostel Mess Announcements</title>
+    <style>
+        /* Basic Styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        .form-section h2 {
+            margin-bottom: 10px;
+        }
+
+        .form-section input, .form-section textarea, .form-section select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-section button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .form-section button:hover {
+            background-color: #218838;
+        }
+
+        .announcement {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hostel Mess Announcements</h1>
+        
+        <!-- Meal Plan Table -->
+        <h2>Weekly Meal Plan</h2>
+        <table>
+            <tr>
+                <th>Day</th>
+                <th>Breakfast</th>
+                <th>Lunch</th>
+                <th>Evening Snacks</th>
+                <th>Dinner</th>
+            </tr>
+            <% ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].forEach(function(day) { %>
+            <tr>
+                <td><%= day.charAt(0).toUpperCase() + day.slice(1) %></td>
+                <td><%= mealPlan[day] && mealPlan[day].breakfast ? mealPlan[day].breakfast : '' %></td>
+                <td><%= mealPlan[day] && mealPlan[day].lunch ? mealPlan[day].lunch : '' %></td>
+                <td><%= mealPlan[day] && mealPlan[day].snacks ? mealPlan[day].snacks : '' %></td>
+                <td><%= mealPlan[day] && mealPlan[day].dinner ? mealPlan[day].dinner : '' %></td>
+            </tr>
+            <% }); %>
+        </table>
+
+        <!-- Suggestion Box -->
+        <div class="form-section">
+            <h2>Suggestion Box</h2>
+            <form action="/submit-suggestion" method="POST">
+                <textarea id="suggestion" name="suggestion" rows="4" placeholder="Your suggestion..."></textarea>
+                <button type="submit">Submit Suggestion</button>
+            </form>
+        </div>
+
+        <!-- Complaint Box -->
+        <div class="form-section">
+            <h2>Complaint Box</h2>
+            <form action="/submit-complaint" method="POST">
+                <label for="complaint-date">Select Date:</label>
+                <input type="date" id="complaint-date" name="date" required>
+                <label for="meal-type">Select Meal:</label>
+                <select id="meal-type" name="meal" required>
+                    <option value="breakfast">Breakfast</option>
+                    <option value="lunch">Lunch</option>
+                    <option value="snacks">Evening Snacks</option>
+                    <option value="dinner">Dinner</option>
+                </select>
+                <textarea id="complaint" name="complaint" rows="4" placeholder="Your complaint..." required></textarea>
+                <button type="submit">Submit Complaint</button>
+            </form>
+        </div>
+
+        <!-- Announcements Section -->
+        <div class="announcement-section">
+            <h2>Announcements</h2>
+            <% if (announcements.length > 0) { %>
+                <% announcements.forEach(function(announcement) { %>
+                    <div class="announcement"><%= announcement %></div>
+                <% }); %>
+            <% } else { %>
+                <div class="announcement">No announcements yet.</div>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>
