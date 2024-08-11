@@ -7,8 +7,12 @@ const mysql = require('mysql2');
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Use EJS for templating
+// Set EJS as the templating engine and explicitly set the views directory
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Create MySQL connection pool
 const pool = mysql.createPool({
@@ -21,7 +25,6 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-
 // Basic Authentication Middleware
 function basicAuth(req, res, next) {
     const auth = { login: process.env.ADMIN_USERNAME, password: process.env.ADMIN_PASSWORD };
@@ -33,9 +36,6 @@ function basicAuth(req, res, next) {
     res.set('WWW-Authenticate', 'Basic realm="401"');
     res.status(401).send('Authentication required.');
 }
-
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
 
 // Home route
 app.get('/', (req, res) => {
@@ -53,6 +53,7 @@ app.get('/', (req, res) => {
     });
 });
 
+// Admin route with basic authentication
 app.get('/admin', basicAuth, (req, res) => {
     pool.query('SELECT * FROM announcements', (err, announcementResults) => {
         if (err) throw err;
@@ -98,7 +99,6 @@ app.get('/admin', basicAuth, (req, res) => {
         });
     });
 });
-
 
 // Handle menu updates
 app.post('/update-menu', basicAuth, (req, res) => {
@@ -147,14 +147,13 @@ app.post('/submit-complaint', (req, res) => {
     });
 });
 
-
-
 // Logout route
 app.get('/logout', (req, res) => {
     res.set('WWW-Authenticate', 'Basic realm="401"');
     res.status(401).send('You have been logged out. <a href="/admin">Login again</a>');
 });
 
+// Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
