@@ -20,6 +20,3 @@ Thumbs.db
 # Output files
 dist/
 build/
-
-# Ignore npm-related files
-package-lock.json
