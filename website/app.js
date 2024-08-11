@@ -21,6 +21,7 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+
 // Basic Authentication Middleware
 function basicAuth(req, res, next) {
     const auth = { login: process.env.ADMIN_USERNAME, password: process.env.ADMIN_PASSWORD };

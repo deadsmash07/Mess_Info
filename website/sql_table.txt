@@ -1,0 +1,33 @@
+-- Create the announcements table
+CREATE TABLE announcements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    announcement TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create the meal_plans table
+CREATE TABLE meal_plans (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    day VARCHAR(10) NOT NULL,
+    meal VARCHAR(20) NOT NULL,
+    menu TEXT NOT NULL,
+    UNIQUE KEY unique_day_meal (day, meal)
+);
+
+-- Create the complaints table
+CREATE TABLE complaints (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    date DATE NOT NULL,
+    meal VARCHAR(20) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    complaint TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create the suggestions table
+CREATE TABLE suggestions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    suggestion TEXT NOT NULL,
+    date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
