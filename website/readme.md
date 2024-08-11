@@ -24,3 +24,4 @@ DESCRIBE table_name;
 ```sql
 SELECT * FROM table_name;
 ```
+- figure out how to use analytics and speedinfo of vercel as i have intalled their packages
