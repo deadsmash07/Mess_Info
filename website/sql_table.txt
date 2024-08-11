@@ -17,7 +17,7 @@ CREATE TABLE meal_plans (
 -- Create the complaints table
 CREATE TABLE complaints (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    date DATE NOT NULL,
+    date DATETIME NOT NULL,  -- Changed to DATETIME to store both date and time
     meal VARCHAR(20) NOT NULL,
     name VARCHAR(255) NOT NULL,
     complaint TEXT NOT NULL,
@@ -28,6 +28,6 @@ CREATE TABLE complaints (
 CREATE TABLE suggestions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     suggestion TEXT NOT NULL,
-    date DATE NOT NULL,
+    date DATETIME NOT NULL,  -- Changed to DATETIME to store both date and time
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

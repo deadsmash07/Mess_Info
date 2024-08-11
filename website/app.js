@@ -59,9 +59,9 @@ app.get('/admin', basicAuth, (req, res) => {
         if (err) throw err;
         pool.query('SELECT * FROM meal_plans', (err, mealPlanResults) => {
             if (err) throw err;
-            pool.query('SELECT * FROM complaints', (err, complaintResults) => {
+            pool.query('SELECT * FROM complaints ORDER BY date DESC', (err, complaintResults) => { // Order by date
                 if (err) throw err;
-                pool.query('SELECT * FROM suggestions ORDER BY date DESC', (err, suggestionResults) => {
+                pool.query('SELECT * FROM suggestions ORDER BY date DESC', (err, suggestionResults) => { // Order by date
                     if (err) throw err;
 
                     // Format dates for display
@@ -130,22 +130,55 @@ app.post('/delete-announcement', basicAuth, (req, res) => {
 // Handle suggestion submission
 app.post('/submit-suggestion', (req, res) => {
     const suggestion = req.body.suggestion;
-    const date = new Date().toISOString().split('T')[0]; // Get date in YYYY-MM-DD format
-    pool.query('INSERT INTO suggestions (suggestion, date) VALUES (?, ?)', [suggestion, date], (err) => {
+    const timestamp = new Date().toISOString().slice(0, 19).replace('T', ' '); // Current timestamp in YYYY-MM-DD HH:MM:SS format
+
+    pool.query('INSERT INTO suggestions (suggestion, date) VALUES (?, ?)', [suggestion, timestamp], (err) => {
         if (err) throw err;
-        res.redirect('/');
+
+        // Clean up old suggestions if more than 10
+        pool.query('SELECT id FROM suggestions ORDER BY date DESC', (err, results) => {
+            if (err) throw err;
+
+            if (results.length > 10) {
+                const idsToDelete = results.slice(10).map(result => result.id);
+                pool.query('DELETE FROM suggestions WHERE id IN (?)', [idsToDelete], (err) => {
+                    if (err) throw err;
+                    res.redirect('/');
+                });
+            } else {
+                res.redirect('/');
+            }
+        });
     });
 });
+
 
 // Handle complaint submission
 app.post('/submit-complaint', (req, res) => {
     const { date, meal, name, complaint } = req.body;
-    const formattedDate = new Date(date).toISOString().split('T')[0]; // Convert selected date to YYYY-MM-DD format
-    pool.query('INSERT INTO complaints (date, meal, name, complaint) VALUES (?, ?, ?, ?)', [formattedDate, meal, name, complaint], (err) => {
+    const timestamp = new Date().toISOString().slice(0, 19).replace('T', ' '); // Current timestamp in YYYY-MM-DD HH:MM:SS format
+
+    pool.query('INSERT INTO complaints (date, meal, name, complaint) VALUES (?, ?, ?, ?)', [timestamp, meal, name, complaint], (err) => {
         if (err) throw err;
-        res.redirect('/');
+
+        // Clean up old complaints if more than 10
+        pool.query('SELECT id FROM complaints ORDER BY date DESC', (err, results) => {
+            if (err) throw err;
+
+            if (results.length > 10) {
+                const idsToDelete = results.slice(10).map(result => result.id);
+                pool.query('DELETE FROM complaints WHERE id IN (?)', [idsToDelete], (err) => {
+                    if (err) throw err;
+                    res.redirect('/');
+                });
+            } else {
+                res.redirect('/');
+            }
+        });
     });
 });
+
+
 
 // Logout route
 app.get('/logout', (req, res) => {
@@ -157,4 +190,5 @@ app.get('/logout', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    console.log('')
 });
