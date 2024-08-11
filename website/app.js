@@ -52,7 +52,6 @@ app.get('/', (req, res) => {
     });
 });
 
-// Admin page route with authentication
 app.get('/admin', basicAuth, (req, res) => {
     pool.query('SELECT * FROM announcements', (err, announcementResults) => {
         if (err) throw err;
@@ -60,8 +59,28 @@ app.get('/admin', basicAuth, (req, res) => {
             if (err) throw err;
             pool.query('SELECT * FROM complaints', (err, complaintResults) => {
                 if (err) throw err;
-                pool.query('SELECT * FROM suggestions', (err, suggestionResults) => {
+                pool.query('SELECT * FROM suggestions ORDER BY date DESC', (err, suggestionResults) => {
                     if (err) throw err;
+
+                    // Format dates for display
+                    suggestionResults.forEach(suggestion => {
+                        suggestion.date = new Date(suggestion.date).toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        });
+                    });
+
+                    complaintResults.forEach(complaint => {
+                        complaint.date = new Date(complaint.date).toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        });
+                    });
+
                     const mealPlan = mealPlanResults.reduce((acc, row) => {
                         if (!acc[row.day]) acc[row.day] = {};
                         acc[row.day][row.meal] = row.menu;
@@ -78,6 +97,7 @@ app.get('/admin', basicAuth, (req, res) => {
         });
     });
 });
+
 
 // Handle menu updates
 app.post('/update-menu', basicAuth, (req, res) => {
@@ -97,10 +117,20 @@ app.post('/add-announcement', basicAuth, (req, res) => {
     });
 });
 
+// Handle deleting an announcement
+app.post('/delete-announcement', basicAuth, (req, res) => {
+    const { id } = req.body;
+    pool.query('DELETE FROM announcements WHERE id = ?', [id], (err) => {
+        if (err) throw err;
+        res.redirect('/admin');
+    });
+});
+
 // Handle suggestion submission
 app.post('/submit-suggestion', (req, res) => {
-    const { suggestion } = req.body;
-    pool.query('INSERT INTO suggestions (suggestion) VALUES (?)', [suggestion], (err) => {
+    const suggestion = req.body.suggestion;
+    const date = new Date().toISOString().split('T')[0]; // Get date in YYYY-MM-DD format
+    pool.query('INSERT INTO suggestions (suggestion, date) VALUES (?, ?)', [suggestion, date], (err) => {
         if (err) throw err;
         res.redirect('/');
     });
@@ -108,12 +138,15 @@ app.post('/submit-suggestion', (req, res) => {
 
 // Handle complaint submission
 app.post('/submit-complaint', (req, res) => {
-    const { date, meal, complaint } = req.body;
-    pool.query('INSERT INTO complaints (date, meal, complaint) VALUES (?, ?, ?)', [date, meal, complaint], (err) => {
+    const { date, meal, name, complaint } = req.body;
+    const formattedDate = new Date(date).toISOString().split('T')[0]; // Convert selected date to YYYY-MM-DD format
+    pool.query('INSERT INTO complaints (date, meal, name, complaint) VALUES (?, ?, ?, ?)', [formattedDate, meal, name, complaint], (err) => {
         if (err) throw err;
         res.redirect('/');
     });
 });
+
+
 
 // Logout route
 app.get('/logout', (req, res) => {

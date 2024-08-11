@@ -77,6 +77,19 @@
         th {
             background-color: #f4f4f4;
         }
+
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            background-color: #c82333;
+        }
     </style>
     <script>
         function updateMenuText() {
@@ -136,6 +149,28 @@
             </form>
         </div>
 
+        <!-- View and Delete Announcements Section -->
+        <div class="form-section">
+            <h2>Current Announcements</h2>
+            <table>
+                <tr>
+                    <th>Announcement</th>
+                    <th>Action</th>
+                </tr>
+                <% announcements.forEach(function(announcement) { %>
+                <tr>
+                    <td><%= announcement.announcement %></td>
+                    <td>
+                        <form action="/delete-announcement" method="POST" style="display:inline;">
+                            <input type="hidden" name="id" value="<%= announcement.id %>">
+                            <button type="submit" class="delete-button">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                <% }); %>
+            </table>
+        </div>
+
         <!-- View Complaints and Suggestions Section -->
         <div class="form-section">
             <h2>Complaints</h2>
@@ -159,26 +194,13 @@
             <h2>Suggestions</h2>
             <table>
                 <tr>
+                    <th>Date</th>
                     <th>Suggestion</th>
                 </tr>
                 <% suggestions.forEach(function(suggestion) { %>
                 <tr>
-                    <td><%= suggestion %></td>
-                </tr>
-                <% }); %>
-            </table>
-        </div>
-
-        <!-- View Announcements Section -->
-        <div class="form-section">
-            <h2>Current Announcements</h2>
-            <table>
-                <tr>
-                    <th>Announcement</th>
-                </tr>
-                <% announcements.forEach(function(announcement) { %>
-                <tr>
-                    <td><%= announcement %></td>
+                    <td><%= suggestion.date %></td>
+                    <td><%= suggestion.suggestion %></td>
                 </tr>
                 <% }); %>
             </table>

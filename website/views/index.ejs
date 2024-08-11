@@ -112,6 +112,18 @@
             <% }); %>
         </table>
 
+        <!-- Announcements Section -->
+        <div class="announcement-section">
+            <h2>Announcements</h2>
+            <% if (announcements.length > 0) { %>
+                <% announcements.forEach(function(announcement) { %>
+                    <div class="announcement"><%= announcement.announcement %></div>
+                <% }); %>
+            <% } else { %>
+                <div class="announcement">No announcements yet.</div>
+            <% } %>
+        </div>
+
         <!-- Suggestion Box -->
         <div class="form-section">
             <h2>Suggestion Box</h2>
@@ -134,21 +146,11 @@
                     <option value="snacks">Evening Snacks</option>
                     <option value="dinner">Dinner</option>
                 </select>
+                <label for="complaint-name">Your Name:</label>
+                <input type="text" id="complaint-name" name="name" placeholder="Your name..." required>
                 <textarea id="complaint" name="complaint" rows="4" placeholder="Your complaint..." required></textarea>
                 <button type="submit">Submit Complaint</button>
             </form>
-        </div>
-
-        <!-- Announcements Section -->
-        <div class="announcement-section">
-            <h2>Announcements</h2>
-            <% if (announcements.length > 0) { %>
-                <% announcements.forEach(function(announcement) { %>
-                    <div class="announcement"><%= announcement %></div>
-                <% }); %>
-            <% } else { %>
-                <div class="announcement">No announcements yet.</div>
-            <% } %>
         </div>
     </div>
 </body>
