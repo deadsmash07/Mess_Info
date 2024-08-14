@@ -39,23 +39,31 @@ function basicAuth(req, res, next) {
 
 // Home route
 app.get('/', (req, res) => {
-    pool.query('SELECT * FROM announcements', (err, announcementResults) => {
+    pool.query('SELECT * FROM announcements ORDER BY id DESC', (err, announcementResults) => { // Latest announcements first
         if (err) throw err;
         pool.query('SELECT * FROM meal_plans', (err, mealPlanResults) => {
             if (err) throw err;
-            const mealPlan = mealPlanResults.reduce((acc, row) => {
-                if (!acc[row.day]) acc[row.day] = {};
-                acc[row.day][row.meal] = row.menu;
-                return acc;
-            }, {});
-            res.render('index', { mealPlan, announcements: announcementResults });
+            pool.query('SELECT MAX(last_updated) as lastUpdated FROM meal_plans', (err, result) => {
+                if (err) throw err;
+                const lastUpdated = result[0].lastUpdated ? new Date(result[0].lastUpdated).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                }) : null;
+                const mealPlan = mealPlanResults.reduce((acc, row) => {
+                    if (!acc[row.day]) acc[row.day] = {};
+                    acc[row.day][row.meal] = row.menu;
+                    return acc;
+                }, {});
+                res.render('index', { mealPlan, announcements: announcementResults, lastUpdated });
+            });
         });
     });
 });
 
 // Admin route with basic authentication
 app.get('/admin', basicAuth, (req, res) => {
-    pool.query('SELECT * FROM announcements', (err, announcementResults) => {
+    pool.query('SELECT * FROM announcements ORDER BY id DESC', (err, announcementResults) => { // Latest announcements first
         if (err) throw err;
         pool.query('SELECT * FROM meal_plans', (err, mealPlanResults) => {
             if (err) throw err;
@@ -70,7 +78,9 @@ app.get('/admin', basicAuth, (req, res) => {
                             weekday: 'short',
                             year: 'numeric',
                             month: 'short',
-                            day: 'numeric'
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: 'numeric',
                         });
                     });
 
@@ -79,7 +89,9 @@ app.get('/admin', basicAuth, (req, res) => {
                             weekday: 'short',
                             year: 'numeric',
                             month: 'short',
-                            day: 'numeric'
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: 'numeric',
                         });
                     });
 
@@ -103,7 +115,8 @@ app.get('/admin', basicAuth, (req, res) => {
 // Handle menu updates
 app.post('/update-menu', basicAuth, (req, res) => {
     const { day, meal, menu } = req.body;
-    pool.query('REPLACE INTO meal_plans (day, meal, menu) VALUES (?, ?, ?)', [day, meal, menu], (err) => {
+    const lastUpdated = new Date().toISOString().slice(0, 19).replace('T', ' '); // Current timestamp in YYYY-MM-DD HH:MM:SS format
+    pool.query('REPLACE INTO meal_plans (day, meal, menu, last_updated) VALUES (?, ?, ?, ?)', [day, meal, menu, lastUpdated], (err) => {
         if (err) throw err;
         res.redirect('/admin');
     });
@@ -129,7 +142,10 @@ app.post('/delete-announcement', basicAuth, (req, res) => {
 
 // Handle suggestion submission
 app.post('/submit-suggestion', (req, res) => {
-    const suggestion = req.body.suggestion;
+    const suggestion = req.body.suggestion.trim();
+    if (!suggestion) {
+        return res.redirect('/'); // Do not submit if the suggestion is empty
+    }
     const timestamp = new Date().toISOString().slice(0, 19).replace('T', ' '); // Current timestamp in YYYY-MM-DD HH:MM:SS format
 
     pool.query('INSERT INTO suggestions (suggestion, date) VALUES (?, ?)', [suggestion, timestamp], (err) => {
@@ -152,13 +168,12 @@ app.post('/submit-suggestion', (req, res) => {
     });
 });
 
-
 // Handle complaint submission
 app.post('/submit-complaint', (req, res) => {
-    const { date, meal, name, complaint } = req.body;
+    const { date, meal, name, mobile, complaint } = req.body;
     const timestamp = new Date().toISOString().slice(0, 19).replace('T', ' '); // Current timestamp in YYYY-MM-DD HH:MM:SS format
 
-    pool.query('INSERT INTO complaints (date, meal, name, complaint) VALUES (?, ?, ?, ?)', [timestamp, meal, name, complaint], (err) => {
+    pool.query('INSERT INTO complaints (date, meal, name, mobile, complaint) VALUES (?, ?, ?, ?, ?)', [timestamp, meal, name, mobile, complaint], (err) => {
         if (err) throw err;
 
         // Clean up old complaints if more than 10
@@ -178,8 +193,6 @@ app.post('/submit-complaint', (req, res) => {
     });
 });
 
-
-
 // Logout route
 app.get('/logout', (req, res) => {
     res.set('WWW-Authenticate', 'Basic realm="401"');
@@ -190,5 +203,4 @@ app.get('/logout', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-    console.log('')
 });

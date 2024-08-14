@@ -179,6 +179,7 @@
                     <th>Date & Time</th>
                     <th>Meal</th>
                     <th>Name</th>
+                    <th>Mobile</th>
                     <th>Complaint</th>
                 </tr>
                 <% complaints.forEach(function(complaint) { %>
@@ -186,6 +187,7 @@
                     <td><%= complaint.date %></td>
                     <td><%= complaint.meal %></td>
                     <td><%= complaint.name %></td>
+                    <td><%= complaint.mobile %></td>
                     <td><%= complaint.complaint %></td>
                 </tr>
                 <% }); %>

@@ -89,10 +89,13 @@
 </head>
 <body>
     <div class="container">
-        <h1>Hostel Mess Announcements</h1>
+        <h1>Zanskar Hostel Mess Announcements</h1>
         
         <!-- Meal Plan Table -->
         <h2>Weekly Meal Plan</h2>
+        <% if (lastUpdated) { %>
+            <p style="color: red;">[Last changed: <%= lastUpdated %>]</p>
+        <% } %>
         <table>
             <tr>
                 <th>Day</th>
@@ -127,8 +130,8 @@
         <!-- Suggestion Box -->
         <div class="form-section">
             <h2>Suggestion Box</h2>
-            <form action="/submit-suggestion" method="POST">
-                <textarea id="suggestion" name="suggestion" rows="4" placeholder="Your suggestion..."></textarea>
+            <form action="/submit-suggestion" method="POST" onsubmit="return validateSuggestion()">
+                <textarea id="suggestion" name="suggestion" rows="4" placeholder="Your suggestion..." required></textarea>
                 <button type="submit">Submit Suggestion</button>
             </form>
         </div>
@@ -148,10 +151,52 @@
                 </select>
                 <label for="complaint-name">Your Name:</label>
                 <input type="text" id="complaint-name" name="name" placeholder="Your name..." required>
+                <label for="complaint-mobile">Your Mobile Number:</label>
+                <input type="tel" id="complaint-mobile" name="mobile" placeholder="Your mobile number..." required>
                 <textarea id="complaint" name="complaint" rows="4" placeholder="Your complaint..." required></textarea>
                 <button type="submit">Submit Complaint</button>
             </form>
         </div>
+
+        <!-- General Guidelines -->
+    <div class="form-section">
+        <h2>General Guidelines</h2>
+        <ul>
+            <li>
+                Maintaining cleanliness in the mess area is everyone's responsibility. Dispose of waste properly and avoid littering.
+            </li>
+            <li>
+                For any special dietary requirements or preferences, kindly inform the mess office in advance. We strive to accommodate all reasonable requests.
+            </li>
+            <li>
+                To avail of extra-messing benefits, please collect the necessary coupons from the mess office. 
+            </li>
+            <li>
+                Please adhere to the mess timings strictly. Latecomers may not be served, so plan your meals accordingly.
+            </li>
+            <li>
+                If you encounter any issues with your meal, such as finding it unsatisfactory or discovering foreign objects in the food, please notify the mess staff or the manager immediately. 
+            </li>
+
+
+        </ul>
     </div>
+
+
+        <!-- Copyright Section -->
+        <div class="form-section">
+            <p>&copy; 2024 Arnav Raj - Mess Secretary, Zanskar Hostel, IIT Delhi</p>
+        </div>
+    </div>
+    <script>
+        function validateSuggestion() {
+            const suggestion = document.getElementById('suggestion').value.trim();
+            if (suggestion === '') {
+                alert('Suggestion cannot be empty');
+                return false;
+            }
+            return true;
+        }
+    </script>
 </body>
 </html>
