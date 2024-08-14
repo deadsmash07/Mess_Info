@@ -172,19 +172,33 @@
         </div>
 
         <!-- View Complaints and Suggestions Section -->
-        <div class="form-section">
+         <div class="form-section">
             <h2>Complaints</h2>
             <table>
                 <tr>
-                    <th>Date & Time</th>
+                    <th>Date & Time (IST)</th>
                     <th>Meal</th>
                     <th>Name</th>
                     <th>Mobile</th>
                     <th>Complaint</th>
                 </tr>
-                <% complaints.forEach(function(complaint) { %>
+                <% complaints.forEach(function(complaint) { 
+                    // Convert the time to IST by adding 5 hours and 30 minutes
+                    let complaintDate = new Date(complaint.date);
+                    complaintDate.setHours(complaintDate.getHours() + 5);
+                    complaintDate.setMinutes(complaintDate.getMinutes() + 30);
+                    let formattedDate = complaintDate.toLocaleDateString('en-IN', {
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                %>
                 <tr>
-                    <td><%= complaint.date %></td>
+                    <td><%= formattedDate %></td>
                     <td><%= complaint.meal %></td>
                     <td><%= complaint.name %></td>
                     <td><%= complaint.mobile %></td>
@@ -198,17 +212,34 @@
             <h2>Suggestions</h2>
             <table>
                 <tr>
-                    <th>Date & Time</th>
+                    <th>Date & Time (IST)</th>
                     <th>Suggestion</th>
                 </tr>
-                <% suggestions.forEach(function(suggestion) { %>
+                <% suggestions.forEach(function(suggestion) { 
+                    // Convert the time to IST by adding 5 hours and 30 minutes
+                    let suggestionDate = new Date(suggestion.date);
+                    suggestionDate.setHours(suggestionDate.getHours() + 5);
+                    suggestionDate.setMinutes(suggestionDate.getMinutes() + 30);
+                    let formattedDate = suggestionDate.toLocaleDateString('en-IN', {
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                %>
                 <tr>
-                    <td><%= suggestion.date %></td>
+                    <td><%= formattedDate %></td>
                     <td><%= suggestion.suggestion %></td>
                 </tr>
                 <% }); %>
             </table>
         </div>
+
+
+
     </div>
 </body>
 </html>
