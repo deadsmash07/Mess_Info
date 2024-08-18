@@ -3,6 +3,7 @@ node_modules/
 
 # Environment variables
 .env
+.sql_table.txt
 
 # Logs
 npm-debug.log*
