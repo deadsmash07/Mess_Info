@@ -23,4 +23,4 @@ dist/
 build/
 
 #others
-.self_kitchen_sop.pdf
+*.pdf
