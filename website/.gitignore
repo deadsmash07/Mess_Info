@@ -21,3 +21,6 @@ Thumbs.db
 # Output files
 dist/
 build/
+
+#others
+.self_kitchen_sop.pdf
