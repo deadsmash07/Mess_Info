@@ -42,9 +42,10 @@
     </header>
     <main class="container fade-in">
       <div class="grid grid-2">
-        <div class="card">
+        <!-- Column 1 -->
+        <div class="card" style="grid-column: 1 / -1">
           <h2>Update Menu</h2>
-          <form action="/update-menu" method="POST">
+          <form action="/update-menu" method="POST" class="menu-form-stacked">
             <label for="day">Day</label>
             <select id="day" name="day" onchange="updateMenuText()" required>
               <option value="">Select</option>
@@ -68,40 +69,55 @@
             <textarea
               id="menu-text"
               name="menu"
-              rows="2"
+              rows="3"
               placeholder="Enter menu..."
               required
             ></textarea>
-            <button type="submit">Save Menu</button>
+            <div
+              id="menu-count"
+              style="
+                font-size: 0.6rem;
+                color: var(--text-soft);
+                margin-top: -0.3rem;
+              "
+            ></div>
+            <button type="submit" class="btn-wide">Save Menu</button>
           </form>
         </div>
 
-        <div class="card">
-          <h2>Announcements</h2>
+        <div class="card span-full">
+          <h2>Announcements (<%= announcements.length %>)</h2>
           <form action="/add-announcement" method="POST">
-            <label for="announcement">New Announcement</label>
+            <label for="announcement">New</label>
             <textarea
               id="announcement"
               name="announcement"
-              rows="3"
+              rows="2"
               required
             ></textarea>
-            <button type="submit">Add</button>
+            <div class="actions-inline" style="justify-content: flex-end">
+              <button type="submit">Add</button>
+            </div>
           </form>
-          <hr />
-          <h3 style="margin-top: 0.25rem">Current</h3>
-          <div class="table-wrapper" style="margin-top: 0.5rem">
-            <table>
+          <div
+            class="table-wrapper"
+            style="margin-top: 0.85rem; max-height: 260px; overflow: auto"
+          >
+            <table class="table-compact">
               <thead>
                 <tr>
                   <th>Announcement</th>
-                  <th style="width: 90px">Action</th>
+                  <th style="width: 68px">Action</th>
                 </tr>
               </thead>
               <tbody>
-                <% announcements.forEach(function(announcement){ %>
+                <% if(announcements.length===0){ %>
                 <tr>
-                  <td style="font-size: 0.75rem; line-height: 1.25">
+                  <td colspan="2" style="font-size: 0.65rem">None yet.</td>
+                </tr>
+                <% } %> <% announcements.forEach(function(announcement){ %>
+                <tr>
+                  <td style="font-size: 0.68rem; line-height: 1.25">
                     <%= announcement.announcement %>
                   </td>
                   <td>
@@ -118,9 +134,9 @@
                       <button
                         type="submit"
                         class="btn-danger"
-                        style="font-size: 0.65rem; padding: 0.45rem 0.6rem"
+                        style="font-size: 0.55rem; padding: 0.38rem 0.55rem"
                       >
-                        Delete
+                        Del
                       </button>
                     </form>
                   </td>
@@ -131,67 +147,115 @@
           </div>
         </div>
 
-        <div class="card">
-          <h2>Complaints</h2>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date & Time (IST)</th>
-                  <th>Meal</th>
-                  <th>Name</th>
-                  <th>Mobile</th>
-                  <th>Complaint</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% complaints.forEach(function(complaint){ let complaintDate =
-                new Date(complaint.date);
-                complaintDate.setMinutes(complaintDate.getMinutes()+330); let
-                formattedDate = complaintDate.toLocaleDateString('en-IN',{
-                weekday:'short',year:'numeric',month:'short',day:'numeric',
-                hour:'2-digit',minute:'2-digit',second:'2-digit' }); %>
-                <tr>
-                  <td><%= formattedDate %></td>
-                  <td><%= complaint.meal %></td>
-                  <td><%= complaint.name %></td>
-                  <td><%= complaint.mobile %></td>
-                  <td style="max-width: 200px; white-space: pre-wrap">
-                    <%= complaint.complaint %>
-                  </td>
-                </tr>
-                <% }) %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>Suggestions</h2>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date & Time (IST)</th>
-                  <th>Suggestion</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% suggestions.forEach(function(suggestion){ let suggestionDate
-                = new Date(suggestion.date);
-                suggestionDate.setMinutes(suggestionDate.getMinutes()+330); let
-                formattedDate = suggestionDate.toLocaleDateString('en-IN',{
-                weekday:'short',year:'numeric',month:'short',day:'numeric',
-                hour:'2-digit',minute:'2-digit',second:'2-digit' }); %>
-                <tr>
-                  <td><%= formattedDate %></td>
-                  <td style="max-width: 300px; white-space: pre-wrap">
-                    <%= suggestion.suggestion %>
-                  </td>
-                </tr>
-                <% }) %>
-              </tbody>
-            </table>
+        <!-- Column 2 full width via grid order when stacked -->
+        <div class="card" style="grid-column: 1 / -1">
+          <h2 style="margin-bottom: 0.75rem">Feedback</h2>
+          <div class="tabs" data-tabs>
+            <div class="tab-list" role="tablist">
+              <button
+                class="tab active"
+                role="tab"
+                aria-selected="true"
+                data-tab-target="complaints"
+              >
+                Complaints (<%= complaints.length %>)
+              </button>
+              <button
+                class="tab"
+                role="tab"
+                aria-selected="false"
+                data-tab-target="suggestions"
+              >
+                Suggestions (<%= suggestions.length %>)
+              </button>
+            </div>
+            <div class="tab-panels">
+              <div id="tab-complaints" class="tab-panel" role="tabpanel">
+                <div
+                  class="table-wrapper"
+                  style="max-height: 340px; overflow: auto"
+                >
+                  <table class="table-compact">
+                    <thead>
+                      <tr>
+                        <th>Date (IST)</th>
+                        <th>Meal</th>
+                        <th>Name</th>
+                        <th>Mobile</th>
+                        <th>Complaint</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% if(complaints.length===0){ %>
+                      <tr>
+                        <td colspan="5" style="font-size: 0.65rem">
+                          No complaints.
+                        </td>
+                      </tr>
+                      <% } %> <% complaints.forEach(function(complaint){ let
+                      complaintDate = new Date(complaint.date);
+                      complaintDate.setMinutes(complaintDate.getMinutes()+330);
+                      let formattedDate =
+                      complaintDate.toLocaleDateString('en-IN',{ month:'short',
+                      day:'numeric', hour:'2-digit', minute:'2-digit'}); %>
+                      <tr>
+                        <td><%= formattedDate %></td>
+                        <td><%= complaint.meal %></td>
+                        <td><%= complaint.name %></td>
+                        <td><%= complaint.mobile %></td>
+                        <td style="max-width: 220px; white-space: pre-wrap">
+                          <%= complaint.complaint %>
+                        </td>
+                      </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div
+                id="tab-suggestions"
+                class="tab-panel"
+                role="tabpanel"
+                hidden
+              >
+                <div
+                  class="table-wrapper"
+                  style="max-height: 340px; overflow: auto"
+                >
+                  <table class="table-compact">
+                    <thead>
+                      <tr>
+                        <th>Date (IST)</th>
+                        <th>Suggestion</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% if(suggestions.length===0){ %>
+                      <tr>
+                        <td colspan="2" style="font-size: 0.65rem">
+                          No suggestions.
+                        </td>
+                      </tr>
+                      <% } %> <% suggestions.forEach(function(suggestion){ let
+                      suggestionDate = new Date(suggestion.date);
+                      suggestionDate.setMinutes(suggestionDate.getMinutes()+330);
+                      let formattedDate =
+                      suggestionDate.toLocaleDateString('en-IN',{ month:'short',
+                      day:'numeric', hour:'2-digit', minute:'2-digit'}); %>
+                      <tr>
+                        <td style="white-space: nowrap">
+                          <%= formattedDate %>
+                        </td>
+                        <td style="max-width: 360px; white-space: pre-wrap">
+                          <%= suggestion.suggestion %>
+                        </td>
+                      </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -210,6 +274,33 @@
           root.classList.contains("dark") ? "dark" : "light"
         );
       });
+      // Tabs
+      document.querySelectorAll("[data-tabs]").forEach((tabs) => {
+        const buttons = tabs.querySelectorAll(".tab");
+        const panels = tabs.querySelectorAll(".tab-panel");
+        buttons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const target = btn.getAttribute("data-tab-target");
+            buttons.forEach((b) => {
+              b.classList.toggle("active", b === btn);
+              b.setAttribute("aria-selected", b === btn);
+            });
+            panels.forEach((p) => {
+              p.hidden = !p.id.endsWith(target);
+            });
+          });
+        });
+      });
+      // Menu counter
+      const menuTa = document.getElementById("menu-text");
+      const menuCount = document.getElementById("menu-count");
+      if (menuTa && menuCount) {
+        const updateCount = () => {
+          menuCount.textContent = menuTa.value.length + " chars";
+        };
+        menuTa.addEventListener("input", updateCount);
+        updateCount();
+      }
     </script>
   </body>
 </html>
