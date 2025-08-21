@@ -1,238 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hostel Mess Announcements</title>
-    <style>
-        /* Basic Styling */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>Zanskar Hostel Mess</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="navbar">
+        <div class="nav-title">Zanskar Mess</div>
+        <button
+          id="themeToggle"
+          class="theme-toggle"
+          type="button"
+          aria-label="Toggle theme"
+        >
+          Theme
+        </button>
+      </div>
+    </header>
+    <main class="container fade-in">
+      <h1>Mess Information Portal</h1>
 
-        .container {
-            width: 80%;
-            margin: 20px auto;
-            background-color: #fff;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: center;
-        }
-
-        th {
-            background-color: #f4f4f4;
-        }
-
-        .form-section {
-            margin-bottom: 20px;
-        }
-
-        .form-section h2 {
-            margin-bottom: 10px;
-        }
-
-        .form-section input, .form-section textarea, .form-section select {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .form-section button {
-            padding: 10px 15px;
-            background-color: #28a745;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .form-section button:hover {
-            background-color: #218838;
-        }
-
-        .announcement {
-            background-color: #e9ecef;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        .small-font {
-            font-size: 12px; 
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Zanskar Hostel Mess Announcements</h1>
-        
-        <!-- Meal Plan Table -->
-        <h2>Weekly Meal Plan</h2>
+      <div class="card">
+        <h2>
+          Weekly Meal Plan <% if (lastUpdated) { %><span class="badge"
+            >Updated</span
+          ><% } %>
+        </h2>
         <% if (lastUpdated) { %>
-            <p style="color: red;">[Menu Last changed: <%= lastUpdated %>]</p>
+        <small class="muted">Menu last changed: <%= lastUpdated %></small>
         <% } %>
-        <table>
-            <tr>
-                <th>Day</th>
-                <th>Breakfast</th>
-                <th>Lunch</th>
-                <th>Evening Snacks</th>
-                <th>Dinner</th>
-            </tr>
-            <% ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].forEach(function(day) { %>
-            <tr>
-                <td><%= day.charAt(0).toUpperCase() + day.slice(1) %></td>
-                <td><%= mealPlan[day] && mealPlan[day].breakfast ? mealPlan[day].breakfast : '' %></td>
-                <td><%= mealPlan[day] && mealPlan[day].lunch ? mealPlan[day].lunch : '' %></td>
-                <td><%= mealPlan[day] && mealPlan[day].snacks ? mealPlan[day].snacks : '' %></td>
-                <td><%= mealPlan[day] && mealPlan[day].dinner ? mealPlan[day].dinner : '' %></td>
-            </tr>
-            <% }); %>
-        </table>
+        <div
+          class="table-wrapper meal-table-wrapper"
+          role="region"
+          aria-label="Weekly Meal Plan"
+          tabindex="0"
+        >
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Day</th>
+                <th scope="col">Breakfast</th>
+                <th scope="col">Lunch</th>
+                <th scope="col">Evening Snacks</th>
+                <th scope="col">Dinner</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%
+              ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].forEach(function(day){
+              %>
+              <tr>
+                <th scope="row">
+                  <%= day.charAt(0).toUpperCase()+day.slice(1) %>
+                </th>
+                <td>
+                  <%= mealPlan[day] && mealPlan[day].breakfast ?
+                  mealPlan[day].breakfast : '' %>
+                </td>
+                <td>
+                  <%= mealPlan[day] && mealPlan[day].lunch ? mealPlan[day].lunch
+                  : '' %>
+                </td>
+                <td>
+                  <%= mealPlan[day] && mealPlan[day].snacks ?
+                  mealPlan[day].snacks : '' %>
+                </td>
+                <td>
+                  <%= mealPlan[day] && mealPlan[day].dinner ?
+                  mealPlan[day].dinner : '' %>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <!-- Mobile card view -->
+        <div class="meal-cards" aria-label="Weekly Meal Plan (mobile)">
+          <%
+          ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].forEach(function(day){
+          %>
+          <div class="meal-card">
+            <h3><%= day.charAt(0).toUpperCase()+day.slice(1) %></h3>
+            <div class="meal-items">
+              <div class="meal-row">
+                <span class="label">Breakfast</span>
+                <span
+                  ><%= mealPlan[day] && mealPlan[day].breakfast ?
+                  mealPlan[day].breakfast : '-' %></span
+                >
+              </div>
+              <div class="meal-row">
+                <span class="label">Lunch</span>
+                <span
+                  ><%= mealPlan[day] && mealPlan[day].lunch ?
+                  mealPlan[day].lunch : '-' %></span
+                >
+              </div>
+              <div class="meal-row">
+                <span class="label">Snacks</span>
+                <span
+                  ><%= mealPlan[day] && mealPlan[day].snacks ?
+                  mealPlan[day].snacks : '-' %></span
+                >
+              </div>
+              <div class="meal-row">
+                <span class="label">Dinner</span>
+                <span
+                  ><%= mealPlan[day] && mealPlan[day].dinner ?
+                  mealPlan[day].dinner : '-' %></span
+                >
+              </div>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+      </div>
 
-        <div class="announcement-section">
-            <h2>Announcements</h2>
-            <% if (announcements.length > 0) { %>
-                <% announcements.forEach(function(announcement) { 
-                    // Convert the time to IST by adding 5 hours and 30 minutes
-                    let announcementDate = new Date(announcement.created_at);
-                    announcementDate.setHours(announcementDate.getHours() + 5);
-                    announcementDate.setMinutes(announcementDate.getMinutes() + 30);
-                    let formattedDate = announcementDate.toLocaleDateString('en-IN', {
-                        weekday: 'short',
-                        <!--year: 'numeric',-->
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        <!--second: '2-digit'-->
-                    });
-                %>
-                <div class="announcement">
-                    <p><%= announcement.announcement %></p>
-                    <small style="color: rgba(223, 122, 122, 0.903);">[<%= formattedDate %>]</small>
-                </div>
-                <% }); %>
-            <% } else { %>
-                <div class="announcement">No announcements yet.</div>
-            <% } %>
+      <div class="grid grid-2" style="margin-top: 1.25rem">
+        <div class="card">
+          <h2>Announcements</h2>
+          <% if (announcements.length) {
+          announcements.forEach(function(announcement){ let d = new
+          Date(announcement.created_at); d.setMinutes(d.getMinutes()+330); let
+          formatted = d.toLocaleDateString('en-IN',{
+          month:'short',day:'numeric', hour:'2-digit',minute:'2-digit' }); %>
+          <div class="announcement">
+            <p><%= announcement.announcement %></p>
+            <time datetime="<%= d.toISOString() %>">[<%= formatted %>]</time>
+          </div>
+          <% }) } else { %>
+          <div class="announcement"><p>No announcements yet.</p></div>
+          <% } %>
         </div>
 
-
-        <!-- Suggestion Box -->
-        <div class="form-section">
-            <h2>Suggestion Box</h2>
-            <form action="/submit-suggestion" method="POST" onsubmit="return validateSuggestion()">
-                <textarea id="suggestion" name="suggestion" rows="4" placeholder="Your suggestion..." required></textarea>
-                <button type="submit">Submit Suggestion</button>
-            </form>
-        </div>
-
-        <!-- Complaint Box -->
-        <div class="form-section">
-            <h2>Complaint Box</h2>
-            <form action="/submit-complaint" method="POST">
-                <label for="complaint-date">Select Date:</label>
-                <input type="date" id="complaint-date" name="date" required>
-                <label for="meal-type">Select Meal:</label>
+        <div class="card">
+          <h2>Suggestion Box</h2>
+          <form
+            action="/submit-suggestion"
+            method="POST"
+            onsubmit="return validateSuggestion()"
+            novalidate
+          >
+            <label for="suggestion">Your Suggestion</label>
+            <textarea
+              id="suggestion"
+              name="suggestion"
+              placeholder="Type your suggestion..."
+              required
+            ></textarea>
+            <button type="submit">Submit Suggestion</button>
+          </form>
+          <hr />
+          <h2 style="margin-top: 0.25rem">Complaint Box</h2>
+          <form action="/submit-complaint" method="POST" novalidate>
+            <div class="flex-row">
+              <div style="flex: 1 1 140px; min-width: 140px">
+                <label for="complaint-date">Date</label>
+                <input type="date" id="complaint-date" name="date" required />
+              </div>
+              <div style="flex: 1 1 160px; min-width: 160px">
+                <label for="meal-type">Meal</label>
                 <select id="meal-type" name="meal" required>
-                    <option value="breakfast">Breakfast</option>
-                    <option value="lunch">Lunch</option>
-                    <option value="snacks">Evening Snacks</option>
-                    <option value="dinner">Dinner</option>
+                  <option value="breakfast">Breakfast</option>
+                  <option value="lunch">Lunch</option>
+                  <option value="snacks">Evening Snacks</option>
+                  <option value="dinner">Dinner</option>
                 </select>
-                <label for="complaint-name">Your Name:</label>
-                <input type="text" id="complaint-name" name="name" placeholder="Your name..." required>
-                <label for="complaint-mobile">Your Mobile Number:</label>
-                <input type="tel" id="complaint-mobile" name="mobile" placeholder="Your mobile number..." required>
-                <textarea id="complaint" name="complaint" rows="4" placeholder="Your complaint..." required></textarea>
-                <button type="submit">Submit Complaint</button>
-            </form>
+              </div>
+            </div>
+            <label for="complaint-name">Name</label>
+            <input
+              type="text"
+              id="complaint-name"
+              name="name"
+              placeholder="Your name"
+              required
+            />
+            <label for="complaint-mobile">Mobile</label>
+            <input
+              type="tel"
+              id="complaint-mobile"
+              name="mobile"
+              placeholder="10-digit number"
+              pattern="[0-9]{10}"
+              required
+            />
+            <label for="complaint">Complaint</label>
+            <textarea
+              id="complaint"
+              name="complaint"
+              placeholder="Describe the issue..."
+              required
+            ></textarea>
+            <button type="submit">Submit Complaint</button>
+          </form>
         </div>
+      </div>
 
-        <!-- General Guidelines -->
-    <div class="form-section">
+      <div class="card" style="margin-top: 1.25rem">
         <h2>General Guidelines</h2>
-        <ul>
-            <li>
-                Mess <a href="https://docs.google.com/document/d/1grdzadpO3sVbroGn8cWwYpPbLevUjl-T9LhWsF_lkXQ/edit" target="_blank">SOP</a> for Self-kitchen. Please follow the guidelines and maintain cleanliness in the kitchen area.
-            </li>
-            <li>
-                Extra messing is available in lunch (till 1:30 PM) everyday* except Wednesday, saturday and sunday.
-            </li>
-            <li>
-                Maintaining cleanliness in the mess area is everyone's responsibility. Dispose of waste properly and avoid littering.
-            </li>
-            <li>
-                For any special dietary requirements or preferences, kindly inform the mess office in advance. We strive to accommodate all reasonable requests.
-            </li>
-            <li>
-                To avail of extra-messing benefits, please collect the necessary coupons from the mess office. 
-            </li>
-            <li>
-                Please adhere to the mess timings strictly. Latecomers may not be served, so plan your meals accordingly. Dinner after 9:05 PM is strictly for sports people only.
-            </li>
-            <li>
-                If you encounter any issues with your meal, such as finding it unsatisfactory or discovering foreign objects in the food, please notify the mess staff or the manager immediately. 
-            </li>
-
-
+        <ul class="guidelines">
+          <li>
+            Mess
+            <a
+              href="https://docs.google.com/document/d/1grdzadpO3sVbroGn8cWwYpPbLevUjl-T9LhWsF_lkXQ/edit"
+              target="_blank"
+              rel="noopener"
+              >SOP</a
+            >
+            for Self-kitchen.
+          </li>
+          <li>
+            Extra messing in lunch (till 1:30 PM) daily* except Wed, Sat, Sun.
+          </li>
+          <li>Maintain cleanliness; dispose waste properly.</li>
+          <li>Inform in advance for special dietary needs.</li>
+          <li>Collect coupons to avail extra-messing benefits.</li>
+          <li>Dinner after 9:05 PM only for sports persons.</li>
+          <li>Report issues (quality/foreign objects) immediately.</li>
         </ul>
-    </div>
-
-
-        <!-- Copyright Section -->
-        <div class="form-section">
-            <p>&copy; 2024 <a href="https://github.com/deadsmash07" target="_blank">Arnav Raj</a> - Mess Secretary, Zanskar Hostel, IIT Delhi</p>
+        <div class="disclaimer">
+          This site is informational; menu and details may change. *Extra
+          messing subject to workload and availability.
         </div>
-        <!-- Want to add a thin horizontal line here-->
-        <hr>    
-        
-        <!-- Disclaimer section-->
-        <div class="form-section">
-            <h2></h2>
-            <p class="small-font">
-               This website is intended for informational purposes only, and the content provided here may be updated periodically. The Mess reserves the right to modify the menu, announcements, and other details as necessary.
-               *Please note that the availability of extra messing is subject to change based on the Mess workload and item availability.
-            </p>
-        </div>
+      </div>
+
+      <footer>
+        &copy; 2024
+        <a href="https://github.com/deadsmash07" target="_blank" rel="noopener"
+          >Arnav Raj</a
+        >
+        - Ex-Mess Secretary, Zanskar Hostel, IIT Delhi
+      </footer>
+    </main>
     <script>
-        function validateSuggestion() {
-            const suggestion = document.getElementById('suggestion').value.trim();
-            if (suggestion === '') {
-                alert('Suggestion cannot be empty');
-                return false;
-            }
-            return true;
+      function validateSuggestion() {
+        const el = document.getElementById("suggestion");
+        if (!el.value.trim()) {
+          alert("Suggestion cannot be empty");
+          el.focus();
+          return false;
         }
+        return true;
+      }
+      const toggleBtn = document.getElementById("themeToggle");
+      const root = document.documentElement;
+      (function initTheme() {
+        const saved = localStorage.getItem("theme");
+        if (saved === "dark") root.classList.add("dark");
+      })();
+      toggleBtn.addEventListener("click", () => {
+        root.classList.toggle("dark");
+        localStorage.setItem(
+          "theme",
+          root.classList.contains("dark") ? "dark" : "light"
+        );
+      });
     </script>
-</body>
+  </body>
 </html>

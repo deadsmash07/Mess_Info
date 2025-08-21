@@ -7,6 +7,12 @@ const mysql = require('mysql2');
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Security headers (CSP)
+app.use((req, res, next) => {
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+    next();
+});
+
 // Set EJS as the templating engine and explicitly set the views directory
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -71,30 +77,6 @@ app.get('/admin', basicAuth, (req, res) => {
                 if (err) throw err;
                 pool.query('SELECT * FROM suggestions ORDER BY date DESC', (err, suggestionResults) => { // Order by date
                     if (err) throw err;
-
-                    // Format dates for display
-                    suggestionResults.forEach(suggestion => {
-                        suggestion.date = new Date(suggestion.date).toLocaleDateString('en-US', {
-                            weekday: 'short',
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: 'numeric',
-                        });
-                    });
-
-                    complaintResults.forEach(complaint => {
-                        complaint.date = new Date(complaint.date).toLocaleDateString('en-US', {
-                            weekday: 'short',
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: 'numeric',
-                        });
-                    });
-
                     const mealPlan = mealPlanResults.reduce((acc, row) => {
                         if (!acc[row.day]) acc[row.day] = {};
                         acc[row.day][row.meal] = row.menu;
