@@ -162,7 +162,7 @@ app.post('/submit-complaint', (req, res) => {
         pool.query('SELECT id FROM complaints ORDER BY date DESC', (err, results) => {
             if (err) throw err;
 
-            if (results.length > 10) {
+            if (results.length > 20) {
                 const idsToDelete = results.slice(10).map(result => result.id);
                 pool.query('DELETE FROM complaints WHERE id IN (?)', [idsToDelete], (err) => {
                     if (err) throw err;
