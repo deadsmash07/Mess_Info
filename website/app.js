@@ -133,12 +133,12 @@ app.post('/submit-suggestion', (req, res) => {
     pool.query('INSERT INTO suggestions (suggestion, date) VALUES (?, ?)', [suggestion, timestamp], (err) => {
         if (err) throw err;
 
-        // Clean up old suggestions if more than 10
+        // Clean up old suggestions if more than 20
         pool.query('SELECT id FROM suggestions ORDER BY date DESC', (err, results) => {
             if (err) throw err;
 
-            if (results.length > 10) {
-                const idsToDelete = results.slice(10).map(result => result.id);
+            if (results.length > 20) {
+                const idsToDelete = results.slice(20).map(result => result.id);
                 pool.query('DELETE FROM suggestions WHERE id IN (?)', [idsToDelete], (err) => {
                     if (err) throw err;
                     res.redirect('/');
@@ -158,12 +158,12 @@ app.post('/submit-complaint', (req, res) => {
     pool.query('INSERT INTO complaints (date, meal, name, mobile, complaint) VALUES (?, ?, ?, ?, ?)', [timestamp, meal, name, mobile, complaint], (err) => {
         if (err) throw err;
 
-        // Clean up old complaints if more than 10
+        // Clean up old complaints if more than 20
         pool.query('SELECT id FROM complaints ORDER BY date DESC', (err, results) => {
             if (err) throw err;
 
             if (results.length > 20) {
-                const idsToDelete = results.slice(10).map(result => result.id);
+                const idsToDelete = results.slice(20).map(result => result.id);
                 pool.query('DELETE FROM complaints WHERE id IN (?)', [idsToDelete], (err) => {
                     if (err) throw err;
                     res.redirect('/');
