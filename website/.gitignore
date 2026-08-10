@@ -3,6 +3,8 @@ node_modules/
 
 # Environment variables
 .env
+.env.*
+!.env.example
 .sql_table.txt
 
 # Logs
@@ -24,3 +26,5 @@ build/
 
 #others
 *.pdf
+.vercel
+.env*.local

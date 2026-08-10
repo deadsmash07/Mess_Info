@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const mysql = require('mysql2');
+const { sql } = require('./db');
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -20,16 +20,35 @@ app.set('views', path.join(__dirname, 'views'));
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Create MySQL connection pool
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+// Must stay below the platform's function timeout (10s on Vercel) so a slow or
+// unreachable database returns a real 503 instead of the request being killed
+// mid-flight and surfacing as a 504.
+const DB_TIMEOUT_MS = Number(process.env.DB_TIMEOUT_MS) || 7000;
+
+function withTimeout(promise) {
+    let timer;
+    const timeout = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`database did not respond within ${DB_TIMEOUT_MS}ms`)), DB_TIMEOUT_MS);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+// Wraps an async route so a rejected promise becomes a 503 response instead of an
+// unhandled rejection. Previously every handler did `if (err) throw err` inside a
+// callback, which killed the process and made the function hang until Vercel's
+// 10s timeout returned a 504.
+function route(handler) {
+    return (req, res, next) => {
+        withTimeout(Promise.resolve(handler(req, res, next))).catch((err) => {
+            console.error(`${req.method} ${req.path} failed:`, err.message);
+            if (res.headersSent) return;
+            res.status(503).type('html').send(
+                '<h1>Service temporarily unavailable</h1>' +
+                '<p>The mess portal could not reach its database. Please try again shortly.</p>'
+            );
+        });
+    };
+}
 
 // Basic Authentication Middleware
 function basicAuth(req, res, next) {
@@ -43,137 +62,121 @@ function basicAuth(req, res, next) {
     res.status(401).send('Authentication required.');
 }
 
+// Collapse meal_plans rows into { day: { meal: menu } }
+function toMealPlan(rows) {
+    return rows.reduce((acc, row) => {
+        if (!acc[row.day]) acc[row.day] = {};
+        acc[row.day][row.meal] = row.menu;
+        return acc;
+    }, {});
+}
+
+// Current timestamp as naive UTC 'YYYY-MM-DD HH:MM:SS'
+function utcTimestamp() {
+    return new Date().toISOString().slice(0, 19).replace('T', ' ');
+}
+
+// Liveness + database reachability probe
+app.get('/healthz', route(async (req, res) => {
+    const rows = await sql`SELECT 1 AS ok`;
+    res.json({ status: 'ok', database: rows[0].ok === 1 ? 'reachable' : 'unexpected' });
+}));
+
 // Home route
-app.get('/', (req, res) => {
-    pool.query('SELECT * FROM announcements ORDER BY id DESC', (err, announcementResults) => { // Latest announcements first
-        if (err) throw err;
-        pool.query('SELECT * FROM meal_plans', (err, mealPlanResults) => {
-            if (err) throw err;
-            pool.query('SELECT MAX(last_updated) as lastUpdated FROM meal_plans', (err, result) => {
-                if (err) throw err;
-                const lastUpdated = result[0].lastUpdated ? new Date(result[0].lastUpdated).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                }) : null;
-                const mealPlan = mealPlanResults.reduce((acc, row) => {
-                    if (!acc[row.day]) acc[row.day] = {};
-                    acc[row.day][row.meal] = row.menu;
-                    return acc;
-                }, {});
-                res.render('index', { mealPlan, announcements: announcementResults, lastUpdated });
-            });
-        });
-    });
-});
+app.get('/', route(async (req, res) => {
+    const [announcements, mealPlanRows, updated] = await Promise.all([
+        sql`SELECT * FROM announcements ORDER BY id DESC`,
+        sql`SELECT * FROM meal_plans`,
+        sql`SELECT MAX(last_updated) AS "lastUpdated" FROM meal_plans`,
+    ]);
+
+    const lastUpdated = updated[0].lastUpdated
+        ? new Date(updated[0].lastUpdated).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+          })
+        : null;
+
+    res.render('index', { mealPlan: toMealPlan(mealPlanRows), announcements, lastUpdated });
+}));
 
 // Admin route with basic authentication
-app.get('/admin', basicAuth, (req, res) => {
-    pool.query('SELECT * FROM announcements ORDER BY id DESC', (err, announcementResults) => { // Latest announcements first
-        if (err) throw err;
-        pool.query('SELECT * FROM meal_plans', (err, mealPlanResults) => {
-            if (err) throw err;
-            pool.query('SELECT * FROM complaints ORDER BY date DESC', (err, complaintResults) => { // Order by date
-                if (err) throw err;
-                pool.query('SELECT * FROM suggestions ORDER BY date DESC', (err, suggestionResults) => { // Order by date
-                    if (err) throw err;
-                    const mealPlan = mealPlanResults.reduce((acc, row) => {
-                        if (!acc[row.day]) acc[row.day] = {};
-                        acc[row.day][row.meal] = row.menu;
-                        return acc;
-                    }, {});
-                    res.render('admin', {
-                        mealPlan,
-                        complaints: complaintResults,
-                        suggestions: suggestionResults,
-                        announcements: announcementResults
-                    });
-                });
-            });
-        });
+app.get('/admin', basicAuth, route(async (req, res) => {
+    const [announcements, mealPlanRows, complaints, suggestions] = await Promise.all([
+        sql`SELECT * FROM announcements ORDER BY id DESC`,
+        sql`SELECT * FROM meal_plans`,
+        sql`SELECT * FROM complaints ORDER BY date DESC`,
+        sql`SELECT * FROM suggestions ORDER BY date DESC`,
+    ]);
+
+    res.render('admin', {
+        mealPlan: toMealPlan(mealPlanRows),
+        complaints,
+        suggestions,
+        announcements,
     });
-});
+}));
 
 // Handle menu updates
-app.post('/update-menu', basicAuth, (req, res) => {
+app.post('/update-menu', basicAuth, route(async (req, res) => {
     const { day, meal, menu } = req.body;
-    const lastUpdated = new Date().toISOString().slice(0, 19).replace('T', ' '); // Current timestamp in YYYY-MM-DD HH:MM:SS format
-    pool.query('REPLACE INTO meal_plans (day, meal, menu, last_updated) VALUES (?, ?, ?, ?)', [day, meal, menu, lastUpdated], (err) => {
-        if (err) throw err;
-        res.redirect('/admin');
-    });
-});
+    await sql`
+        INSERT INTO meal_plans (day, meal, menu, last_updated)
+        VALUES (${day}, ${meal}, ${menu}, ${utcTimestamp()})
+        ON CONFLICT (day, meal)
+        DO UPDATE SET menu = EXCLUDED.menu, last_updated = EXCLUDED.last_updated
+    `;
+    res.redirect('/admin');
+}));
 
 // Handle announcement updates
-app.post('/add-announcement', basicAuth, (req, res) => {
+app.post('/add-announcement', basicAuth, route(async (req, res) => {
     const { announcement } = req.body;
-    pool.query('INSERT INTO announcements (announcement) VALUES (?)', [announcement], (err) => {
-        if (err) throw err;
-        res.redirect('/admin');
-    });
-});
+    await sql`INSERT INTO announcements (announcement) VALUES (${announcement})`;
+    res.redirect('/admin');
+}));
 
 // Handle deleting an announcement
-app.post('/delete-announcement', basicAuth, (req, res) => {
+app.post('/delete-announcement', basicAuth, route(async (req, res) => {
     const { id } = req.body;
-    pool.query('DELETE FROM announcements WHERE id = ?', [id], (err) => {
-        if (err) throw err;
-        res.redirect('/admin');
-    });
-});
+    await sql`DELETE FROM announcements WHERE id = ${id}`;
+    res.redirect('/admin');
+}));
 
 // Handle suggestion submission
-app.post('/submit-suggestion', (req, res) => {
-    const suggestion = req.body.suggestion.trim();
+app.post('/submit-suggestion', route(async (req, res) => {
+    const suggestion = (req.body.suggestion || '').trim();
     if (!suggestion) {
         return res.redirect('/'); // Do not submit if the suggestion is empty
     }
-    const timestamp = new Date().toISOString().slice(0, 19).replace('T', ' '); // Current timestamp in YYYY-MM-DD HH:MM:SS format
 
-    pool.query('INSERT INTO suggestions (suggestion, date) VALUES (?, ?)', [suggestion, timestamp], (err) => {
-        if (err) throw err;
+    await sql`INSERT INTO suggestions (suggestion, date) VALUES (${suggestion}, ${utcTimestamp()})`;
 
-        // Clean up old suggestions if more than 20
-        pool.query('SELECT id FROM suggestions ORDER BY date DESC', (err, results) => {
-            if (err) throw err;
-
-            if (results.length > 20) {
-                const idsToDelete = results.slice(20).map(result => result.id);
-                pool.query('DELETE FROM suggestions WHERE id IN (?)', [idsToDelete], (err) => {
-                    if (err) throw err;
-                    res.redirect('/');
-                });
-            } else {
-                res.redirect('/');
-            }
-        });
-    });
-});
+    // Keep only the 20 most recent suggestions
+    await sql`
+        DELETE FROM suggestions
+        WHERE id NOT IN (SELECT id FROM suggestions ORDER BY date DESC LIMIT 20)
+    `;
+    res.redirect('/');
+}));
 
 // Handle complaint submission
-app.post('/submit-complaint', (req, res) => {
-    const { date, meal, name, mobile, complaint } = req.body;
-    const timestamp = new Date().toISOString().slice(0, 19).replace('T', ' '); // Current timestamp in YYYY-MM-DD HH:MM:SS format
+app.post('/submit-complaint', route(async (req, res) => {
+    const { meal, name, mobile, complaint } = req.body;
 
-    pool.query('INSERT INTO complaints (date, meal, name, mobile, complaint) VALUES (?, ?, ?, ?, ?)', [timestamp, meal, name, mobile, complaint], (err) => {
-        if (err) throw err;
+    await sql`
+        INSERT INTO complaints (date, meal, name, mobile, complaint)
+        VALUES (${utcTimestamp()}, ${meal}, ${name}, ${mobile}, ${complaint})
+    `;
 
-        // Clean up old complaints if more than 20
-        pool.query('SELECT id FROM complaints ORDER BY date DESC', (err, results) => {
-            if (err) throw err;
-
-            if (results.length > 20) {
-                const idsToDelete = results.slice(20).map(result => result.id);
-                pool.query('DELETE FROM complaints WHERE id IN (?)', [idsToDelete], (err) => {
-                    if (err) throw err;
-                    res.redirect('/');
-                });
-            } else {
-                res.redirect('/');
-            }
-        });
-    });
-});
+    // Keep only the 20 most recent complaints
+    await sql`
+        DELETE FROM complaints
+        WHERE id NOT IN (SELECT id FROM complaints ORDER BY date DESC LIMIT 20)
+    `;
+    res.redirect('/');
+}));
 
 // Logout route
 app.get('/logout', (req, res) => {
